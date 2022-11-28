@@ -2,6 +2,8 @@ package com.devsuperior.crud.services;
 
 import com.devsuperior.crud.dto.ClientDTO;
 import com.devsuperior.crud.entities.Client;
+import com.devsuperior.crud.exeptions.DatabaseExeption;
+import com.devsuperior.crud.exeptions.RecourceNotFoundExeption;
 import com.devsuperior.crud.repositories.ClientRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -26,7 +28,8 @@ public class ClientService {
 
     @Transactional(readOnly = true)
     public ClientDTO findById(Long id) {
-        Client client = repository.findById(id).get();
+        Client client = repository.findById(id).orElseThrow(
+                () -> new RecourceNotFoundExeption("Recurso não encontrado"));
         return new ClientDTO(client);
     }
 
@@ -46,15 +49,29 @@ public class ClientService {
 
     @Transactional
     public ClientDTO update(Long id, ClientDTO dto) {
+        try{
             Client entity = repository.getReferenceById(id);
             copyDtoToEntity(dto, entity);
             entity = repository.save(entity);
             return new ClientDTO(entity);
         }
+        catch (EntityNotFoundException e){
+            throw  new RecourceNotFoundExeption("Recurso n~so encontrado");
+        }
+
+        }
 
     @Transactional(propagation = Propagation.SUPPORTS)
     public void delete(Long id){
+        try{
             repository.deleteById(id);
+        }
+        catch (EmptyResultDataAccessException e){
+            throw new RecourceNotFoundExeption("Recurso não encontrado");
+        }
+        catch (DataIntegrityViolationException e){
+            throw new DatabaseExeption("Falha de integridade referencial");
+        }
     }
 
     private void copyDtoToEntity(ClientDTO dto, Client entity) {
