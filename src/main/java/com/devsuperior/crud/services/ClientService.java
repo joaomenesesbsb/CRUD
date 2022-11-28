@@ -6,10 +6,13 @@ import com.devsuperior.crud.repositories.ClientRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,6 +51,11 @@ public class ClientService {
             entity = repository.save(entity);
             return new ClientDTO(entity);
         }
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public void delete(Long id){
+            repository.deleteById(id);
+    }
 
     private void copyDtoToEntity(ClientDTO dto, Client entity) {
         entity.setName(dto.getName());
